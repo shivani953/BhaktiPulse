@@ -1,30 +1,49 @@
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
 
 const app = express();
-app.use(cors());
+
+// ✅ CORS (important for frontend connection)
+app.use(cors({
+  origin: "*"
+}));
+
 app.use(express.json());
 
-// 🔥 ONLY MEMORY STORAGE
 let logs = [];
 
-// HOME
+// ✅ LOAD DATA
+if (fs.existsSync("data.json")) {
+  logs = JSON.parse(fs.readFileSync("data.json"));
+}
+
+// ✅ HOME ROUTE
 app.get("/", (req, res) => {
-  res.send("🚀 BhaktiPulse Backend Running");
+  res.send("🚀 BhaktiPulse Backend Running Online");
 });
 
-// SUBMIT
+// ✅ SUBMIT DATA
 app.post("/submit", (req, res) => {
   const { name, date, count } = req.body;
 
-  let time = new Date().toLocaleTimeString();
+  if (!name || !count || count <= 0) {
+    return res.status(400).json({ error: "Invalid input" });
+  }
 
-  logs.push({ name, count, date, time });
+  logs.push({
+    name,
+    count,
+    date,
+    time: new Date().toLocaleTimeString()
+  });
 
-  res.json({ message: "Saved" });
+  fs.writeFileSync("data.json", JSON.stringify(logs, null, 2));
+
+  res.json({ message: "Saved successfully ✅" });
 });
 
-// DASHBOARD (DYNAMIC CALCULATION)
+// ✅ DASHBOARD DATA
 app.get("/data", (req, res) => {
   let today = new Date().toISOString().split("T")[0];
 
@@ -43,16 +62,35 @@ app.get("/data", (req, res) => {
   });
 });
 
-// TODAY LOGS
+// ✅ TODAY LOGS (WITH INDEX)
 app.get("/logs", (req, res) => {
   let today = new Date().toISOString().split("T")[0];
 
-  let todayLogs = logs.filter(log => log.date === today);
+  let todayLogs = logs
+    .map((log, index) => ({ ...log, index }))
+    .filter(log => log.date === today);
 
   res.json(todayLogs);
 });
 
-// START SERVER
-app.listen(5000, () => {
-  console.log("🚀 Server running on http://localhost:5000");
+// ✅ DELETE ENTRY
+app.delete("/delete/:index", (req, res) => {
+  const index = parseInt(req.params.index);
+
+  if (logs[index] !== undefined) {
+    logs.splice(index, 1);
+
+    fs.writeFileSync("data.json", JSON.stringify(logs, null, 2));
+
+    res.json({ message: "Deleted successfully 🗑️" });
+  } else {
+    res.status(404).json({ error: "Entry not found ❌" });
+  }
+});
+
+// ✅ DEPLOY PORT (IMPORTANT)
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
