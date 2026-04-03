@@ -1,29 +1,25 @@
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
-
 const app = express();
-
-// ✅ CORS (important for frontend connection)
 app.use(cors({
   origin: "*"
 }));
 
 app.use(express.json());
-
 let logs = [];
 
-// ✅ LOAD DATA
+// LOAD 
 if (fs.existsSync("data.json")) {
   logs = JSON.parse(fs.readFileSync("data.json"));
 }
 
-// ✅ HOME ROUTE
+// HOME 
 app.get("/", (req, res) => {
   res.send("🚀 BhaktiPulse Backend Running Online");
 });
 
-// ✅ SUBMIT DATA
+//  SUBMIT 
 app.post("/submit", (req, res) => {
   const { name, date, count } = req.body;
 
@@ -43,7 +39,7 @@ app.post("/submit", (req, res) => {
   res.json({ message: "Saved successfully ✅" });
 });
 
-// ✅ DASHBOARD DATA
+//  DASHBOARD
 app.get("/data", (req, res) => {
   let today = new Date().toISOString().split("T")[0];
 
@@ -62,7 +58,7 @@ app.get("/data", (req, res) => {
   });
 });
 
-// ✅ TODAY LOGS (WITH INDEX)
+//  LOGS 
 app.get("/logs", (req, res) => {
   let today = new Date().toISOString().split("T")[0];
 
@@ -73,7 +69,7 @@ app.get("/logs", (req, res) => {
   res.json(todayLogs);
 });
 
-// ✅ DELETE ENTRY
+//  DELETE 
 app.delete("/delete/:index", (req, res) => {
   const index = parseInt(req.params.index);
 
@@ -88,7 +84,7 @@ app.delete("/delete/:index", (req, res) => {
   }
 });
 
-// ✅ DEPLOY PORT (IMPORTANT)
+// DEPLOY PORT 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
